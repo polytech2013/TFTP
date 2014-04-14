@@ -39,7 +39,7 @@ public class STF {
         }
         
         try {
-            this.server_socket = new DatagramSocket(server_port, this.server_address);
+            this.server_socket = new DatagramSocket(1025);
         } catch (SocketException ex) {
             Logger.getLogger(STF.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -56,7 +56,8 @@ public class STF {
         byte[] data = new byte[Packet.MAX_DATA_SIZE];
         
         try {
-            this.in = new FileInputStream("C:\\Users\\Mario\\Documents\\NetBeansProjects\\TFTP\\" + filename);
+//            this.in = new FileInputStream("C:\\Users\\Mario\\Documents\\NetBeansProjects\\TFTP\\" + filename);
+            this.in = new FileInputStream("D:\\MyFile\\Polytech\\Semestre 6\\ARAR\\TFTP\\" + filename);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(STF.class.getName()).log(Level.SEVERE, null, ex);
         }
