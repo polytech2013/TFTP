@@ -119,8 +119,8 @@ public class TFTPClient {
             Logger.getLogger(TFTPClient.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-     /*
+
+    /*
      * Try to create a new socket, set the time out and return local port number.
      */
     private int initialiseSocket() throws Exception {
@@ -157,7 +157,7 @@ public class TFTPClient {
     }
 
     public int sendFile(String filename) throws Exception {
-       
+
         boolean finished = false;
         int returnCode = 0;
         int retriesCounter = 1;
@@ -166,10 +166,10 @@ public class TFTPClient {
         setOpCode(PACKET_WRQ);
         this.fileName = filename;
 
-         FileInputStream input;
-         
-         input = new FileInputStream(fileName);
-         
+        FileInputStream input;
+
+        input = new FileInputStream(fileName);
+
         // Build TFTP Read request packet
         if (buildTftpPacket()) {
             // If packet has been built successfully, try to send it
@@ -181,27 +181,33 @@ public class TFTPClient {
                 switch (readTftpPacketValue) {
                     case 0:
                         retriesCounter = 1;
-                        
+
                         /*
-                        Faut modifier les variables :
-                            this.blockNumber qui représente le numéro du block
-                            this.data , qui va récupère 512 bytes du fichier à chaque passage dans la boucle
+                         Faut modifier les variables :
+                         this.blockNumber qui représente le numéro du block
+                         this.data , qui va récupère 512 bytes du fichier à chaque passage dans la boucle
                         
-                        si on fait un paquet de moins de 512 bytes, c'est le dernier parquet à envoyer
-                            passer finished à true
-                        */
-                        
+                         si on fait un paquet de moins de 512 bytes, c'est le dernier parquet à envoyer
+                         passer finished à true
+                         */
                         //Phase de test
                         
-                        
-                        
+                        //transfomer un int en byte
+//                        private byte[] toBytes (int i){
+//                            byte[] result = new byte[2];
+//
+//                            result[0] = (byte) (i >> 8);
+//                            result[1] = (byte) (i /*>> 0*/);
+//
+//                            return result;
+//                        }
+
                         setOpCode(PACKET_DATA);
-                        if(buildTftpPacket()){
+                        if (buildTftpPacket()) {
                             sendTftpPacket();
                         }
-                        
+
                         //Fin phase de test
-                        
                         break;
                     case 1:
                         // A socket timeout has occurred.  Need to resend last packet
@@ -237,110 +243,97 @@ public class TFTPClient {
         }
         return returnCode;
     }
-    
+
     /*
      * This method fetches a file from a TFTP server.
      */
-    public int receiveFile(String filename) throws Exception
-    {
+    public int receiveFile(String filename) throws Exception {
         boolean finished = false;
         int returnCode = 0;
         int retriesCounter = 1;
         int readTftpPacketValue = 0;
 
         this.fileName = filename;
-        
+
         // Clear any previous received data
         receivedData.reset();
         // Set op code to read request
         setOpCode(PACKET_RRQ);
-        this.errorMessage=ERROR_MESSAGES[8];
+        this.errorMessage = ERROR_MESSAGES[8];
         // Build TFTP Read request packet
-       if (buildTftpPacket())
-         {
-             // If packet has been built successfully, try to send it
-             sendTftpPacket();
-             // Loop until we are finished
-                while (! finished)
-                {
-                    // Try to read packet from the network
-                    readTftpPacketValue = readTftpPacket();
-                    switch (readTftpPacketValue)
-                    {
-                        case 0:
-                            // If successfull, parse packet
-                            retriesCounter = 1;
-                            switch (parseTftpPacket())
-                            {
-                                case 3:
+        if (buildTftpPacket()) {
+            // If packet has been built successfully, try to send it
+            sendTftpPacket();
+            // Loop until we are finished
+            while (!finished) {
+                // Try to read packet from the network
+                readTftpPacketValue = readTftpPacket();
+                switch (readTftpPacketValue) {
+                    case 0:
+                        // If successfull, parse packet
+                        retriesCounter = 1;
+                        switch (parseTftpPacket()) {
+                            case 3:
                                      // Data packet
-                                     // Check that data part is 512 bytes long
-                                     if (this.dataLength == 512)
-                                     {
-                                         // Build an acknowledgement packet and send it back
-                                         setOpCode(PACKET_ACK);
-                                         if (buildTftpPacket())
-                                              // Send packet
-                                             sendTftpPacket();
-                                     }
-                                     else
-                                     {
+                                // Check that data part is 512 bytes long
+                                if (this.dataLength == 512) {
+                                    // Build an acknowledgement packet and send it back
+                                    setOpCode(PACKET_ACK);
+                                    if (buildTftpPacket()) // Send packet
+                                    {
+                                        sendTftpPacket();
+                                    }
+                                } else {
                                          // If data part is less then 512 bytes long then this is
-                                         // the last data packet
-                                         setOpCode(PACKET_ACK);
-                                         // Build the last acknowledgement packet
-                                         if (buildTftpPacket())
-                                         {
-                                             // Send packet
-                                             sendTftpPacket();
-                                             finished = true;
-                                         }
-                                     }
-                                     break;
-                                case 5:
-                                    // Error packet has been received
-                                    finished = true;
-                                    returnCode = 1;
-                                    break;
-                            }
-                            break;
-                        case 1:
+                                    // the last data packet
+                                    setOpCode(PACKET_ACK);
+                                    // Build the last acknowledgement packet
+                                    if (buildTftpPacket()) {
+                                        // Send packet
+                                        sendTftpPacket();
+                                        finished = true;
+                                    }
+                                }
+                                break;
+                            case 5:
+                                // Error packet has been received
+                                finished = true;
+                                returnCode = 1;
+                                break;
+                        }
+                        break;
+                    case 1:
                             // A socket timeout has occurred.  Need to resend last packet
-                            // First check that the client has not exceeded the number of
-                            // retries
-                            if (retriesCounter < this.retries)
-                            {
+                        // First check that the client has not exceeded the number of
+                        // retries
+                        if (retriesCounter < this.retries) {
+                            // Send packet
+                            sendTftpPacket();
+                            retriesCounter++;
+                        } else {
+                            // If number of retries has been exceeded send an error packet
+                            setOpCode(PACKET_ERROR);
+                            setErrorCode(ERROR_NOT_DEFINED);
+                            if (buildTftpPacket()) {
                                 // Send packet
                                 sendTftpPacket();
-                                retriesCounter++;
+                                // After sending the error packet terminate
+                                finished = true;
+                                returnCode = 2;
                             }
-                            else
-                            {
-                                // If number of retries has been exceeded send an error packet
-                                setOpCode(PACKET_ERROR);
-                                setErrorCode(ERROR_NOT_DEFINED);
-                                if (buildTftpPacket())
-                                {
-                                    // Send packet
-                                    sendTftpPacket();
-                                    // After sending the error packet terminate
-                                    finished = true;
-                                    returnCode = 2;
-                                }
-                            }
-                            break;
-                     }
-                 }
-             }
-        try
-        {
+                        }
+                        break;
+                }
+            }
+        }
+        try {
             // Close socket.  Ignore any thrown exceptions
             socket.close();
+        } catch (Exception e) {
         }
-        catch (Exception e)
-        {}
         return returnCode;
     }
+
     private boolean buildTftpPacket() {
         Byte errorCode;
 
@@ -417,56 +410,52 @@ public class TFTPClient {
         }
         return returnValue;
     }
-/*
+    /*
      * The method parses a tftp packet and disassembles it into its components
      */
-    private int parseTftpPacket()
-    {
+
+    private int parseTftpPacket() {
         String errorMessage;
         byte[] blockNumber = new byte[2];
         byte[] oldBlockNumber;
 
         tftpReceivedPacket = new ByteArrayInputStream(receivePacket.getData(),
-                                                      0, receivePacket.getLength());
+                0, receivePacket.getLength());
         tftpReceivedPacket.read(opCode, 0, 2);
 
-        switch (opCode[1])
-        {
+        switch (opCode[1]) {
             case PACKET_ACK:
                 tftpReceivedPacket.read(blockNumber, 0, 2);
-                this.blockNumber=blockNumber;
+                this.blockNumber = blockNumber;
                 return 4;
             case PACKET_DATA:
                 oldBlockNumber = this.blockNumber;
                 tftpReceivedPacket.read(blockNumber, 0, 2);
-                this.blockNumber=blockNumber;
+                this.blockNumber = blockNumber;
                 // set current packet length
-                this.dataLength=tftpReceivedPacket.available();
+                this.dataLength = tftpReceivedPacket.available();
                 // If block numbers are different then it is a new data packet
-                if (! Arrays.equals(blockNumber, oldBlockNumber))
-                {
+                if (!Arrays.equals(blockNumber, oldBlockNumber)) {
                     // At this time these steps are unnecessary but may be usefull in
                     // the future
                     data = new byte[this.dataLength];
                     tftpReceivedPacket.read(data, 0, data.length);
                     // Add new data chunck length to the old value
-                    this.totalDataLength=this.totalDataLength+this.dataLength;
+                    this.totalDataLength = this.totalDataLength + this.dataLength;
                     // Add new data chunck length to the total overall download length
-                    this.totalActualDataLength=this.totalActualDataLength+this.dataLength;
-                }
-                else
-                {
+                    this.totalActualDataLength = this.totalActualDataLength + this.dataLength;
+                } else {
                     // If it is a retransmit just add its length to the overall download length
-                   this.totalActualDataLength=this.totalActualDataLength+this.dataLength;
+                    this.totalActualDataLength = this.totalActualDataLength + this.dataLength;
                 }
                 return 3;
             case PACKET_ERROR:
                 tftpReceivedPacket.read(errorCode, 0, 2);
-                this.dataLength=tftpReceivedPacket.available() - 1;
+                this.dataLength = tftpReceivedPacket.available() - 1;
                 data = new byte[this.dataLength];
                 tftpReceivedPacket.read(data, 0, data.length);
                 errorMessage = new String(data);
-                this.errorMessage=errorMessage;
+                this.errorMessage = errorMessage;
                 return 5;
             case PACKET_RRQ:
                 return 1;
@@ -476,5 +465,5 @@ public class TFTPClient {
                 return 6;
         }
     }
-   
+
 }
