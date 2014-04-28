@@ -166,6 +166,10 @@ public class TFTPClient {
         setOpCode(PACKET_WRQ);
         this.fileName = filename;
 
+         FileInputStream input;
+         
+         input = new FileInputStream(fileName);
+         
         // Build TFTP Read request packet
         if (buildTftpPacket()) {
             // If packet has been built successfully, try to send it
@@ -177,6 +181,26 @@ public class TFTPClient {
                 switch (readTftpPacketValue) {
                     case 0:
                         retriesCounter = 1;
+                        
+                        /*
+                        Faut modifier les variables :
+                            this.blockNumber qui représente le numéro du block
+                            this.data , qui va récupère 512 bytes du fichier à chaque passage dans la boucle
+                        
+                        si on fait un paquet de moins de 512 bytes, c'est le dernier parquet à envoyer
+                            passer finished à true
+                        */
+                        
+                        //Phase de test
+                        
+                        
+                        
+                        setOpCode(PACKET_DATA);
+                        if(buildTftpPacket()){
+                            sendTftpPacket();
+                        }
+                        
+                        //Fin phase de test
                         
                         break;
                     case 1:
@@ -213,10 +237,11 @@ public class TFTPClient {
         }
         return returnCode;
     }
-/*
+    
+    /*
      * This method fetches a file from a TFTP server.
      */
-    int receiveFile(String filename) throws Exception
+    public int receiveFile(String filename) throws Exception
     {
         boolean finished = false;
         int returnCode = 0;
