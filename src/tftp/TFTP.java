@@ -45,8 +45,8 @@ public class TFTP {
                 }
                 break;
         }
-        
-        if(result==1){
+        System.out.println(result);
+        if(result==0){
             System.out.println("Succesfull transaction");
         }else{
             System.out.println("An error occured, please try again");

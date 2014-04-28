@@ -227,7 +227,7 @@ public class TFTPClient {
         
         // Clear any previous received data
         receivedData.reset();
-        // Set op code to read request and set remote port to 69
+        // Set op code to read request
         setOpCode(PACKET_RRQ);
         this.errorMessage=ERROR_MESSAGES[8];
         // Build TFTP Read request packet
